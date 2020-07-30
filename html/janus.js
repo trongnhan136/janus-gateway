@@ -1161,6 +1161,7 @@ function Janus(gatewayCallbacks) {
 		callbacks.ondataopen = (typeof callbacks.ondataopen == "function") ? callbacks.ondataopen : Janus.noop;
 		callbacks.oncleanup = (typeof callbacks.oncleanup == "function") ? callbacks.oncleanup : Janus.noop;
 		callbacks.ondetached = (typeof callbacks.ondetached == "function") ? callbacks.ondetached : Janus.noop;
+		callbacks.onscreenshare = (typeof callbacks.onscreenshare == "function") ? callbacks.onscreenshare : null;
 		if(!connected) {
 			Janus.warn("Is the server down? (connected=false)");
 			callbacks.error("Is the server down? (connected=false)");
@@ -1252,6 +1253,7 @@ function Janus(gatewayCallbacks) {
 						ondataopen : callbacks.ondataopen,
 						oncleanup : callbacks.oncleanup,
 						ondetached : callbacks.ondetached,
+						onscreenshare : callbacks.onscreenshare,
 						hangup : function(sendRequest) { cleanupWebrtc(handleId, sendRequest === true); },
 						detach : function(callbacks) { destroyHandle(handleId, callbacks); }
 					};
@@ -1337,6 +1339,7 @@ function Janus(gatewayCallbacks) {
 						ondataopen : callbacks.ondataopen,
 						oncleanup : callbacks.oncleanup,
 						ondetached : callbacks.ondetached,
+						onscreenshare : callbacks.onscreenshare,
 						hangup : function(sendRequest) { cleanupWebrtc(handleId, sendRequest === true); },
 						detach : function(callbacks) { destroyHandle(handleId, callbacks); }
 					}
@@ -2321,9 +2324,7 @@ function Janus(gatewayCallbacks) {
 					}
 				} else if(media.video === 'screen' || media.video === 'window') {
 					if(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-						// The new experimental getDisplayMedia API is available, let's use that
-						// https://groups.google.com/forum/#!topic/discuss-webrtc/Uf0SrR4uxzk
-						// https://webrtchacks.com/chrome-screensharing-getdisplaymedia/
+						Janus.log("test");
 						constraints.video = {};
 						if(media.screenshareFrameRate) {
 							constraints.video.frameRate = media.screenshareFrameRate;
@@ -2335,7 +2336,28 @@ function Janus(gatewayCallbacks) {
 							constraints.video.width = media.screenshareWidth;
 						}
 						constraints.audio = media.captureDesktopAudio;
-						navigator.mediaDevices.getDisplayMedia(constraints)
+
+						if(pluginHandle.onscreenshare){
+							Janus.log('Get stream for electron app');
+							pluginHandle.onscreenshare(constraints, (stream)=>{
+								if(stream){
+									pluginHandle.consentDialog(false);
+									if(isAudioSendEnabled(media) && !media.keepAudio) {
+										navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+										.then(function (audioStream) {
+											stream.addTrack(audioStream.getAudioTracks()[0]);
+											streamsDone(handleId, jsep, media, callbacks, stream);
+										})
+									} else {
+										streamsDone(handleId, jsep, media, callbacks, stream);
+									}
+								}else{
+									pluginHandle.consentDialog(false);
+									callbacks.error('electron stream error');
+								}
+							});
+						}else{
+							navigator.mediaDevices.getDisplayMedia(constraints)
 							.then(function(stream) {
 								pluginHandle.consentDialog(false);
 								if(isAudioSendEnabled(media) && !media.keepAudio) {
@@ -2351,6 +2373,7 @@ function Janus(gatewayCallbacks) {
 								pluginHandle.consentDialog(false);
 								callbacks.error(error);
 							});
+						}
 						return;
 					}
 					// We're going to try and use the extension for Chrome 34+, the old approach
