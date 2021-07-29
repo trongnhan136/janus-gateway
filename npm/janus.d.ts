@@ -73,6 +73,7 @@ declare namespace JanusJS {
 		ondata?: Function;
 		oncleanup?: Function;
 		detached?: Function;
+		onscreenshare?: Function;
 	}
 
 	interface OfferParams {

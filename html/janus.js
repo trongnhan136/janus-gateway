@@ -2324,7 +2324,6 @@ function Janus(gatewayCallbacks) {
 					}
 				} else if(media.video === 'screen' || media.video === 'window') {
 					if(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-						Janus.log("test");
 						constraints.video = {};
 						if(media.screenshareFrameRate) {
 							constraints.video.frameRate = media.screenshareFrameRate;
@@ -2339,16 +2338,18 @@ function Janus(gatewayCallbacks) {
 
 						if(pluginHandle.onscreenshare){
 							Janus.log('Get stream for electron app');
-							pluginHandle.onscreenshare(constraints, (stream)=>{
+							pluginHandle.onscreenshare(constraints, (stream, preventSetting)=>{
 								if(stream){
 									pluginHandle.consentDialog(false);
-									if(isAudioSendEnabled(media) && !media.keepAudio) {
+									if(!preventSetting && isAudioSendEnabled(media) && !media.keepAudio) {
+										Janus.log('Start add micro audio stream for screen stream');
 										navigator.mediaDevices.getUserMedia({ audio: true, video: false })
 										.then(function (audioStream) {
 											stream.addTrack(audioStream.getAudioTracks()[0]);
 											streamsDone(handleId, jsep, media, callbacks, stream);
 										})
 									} else {
+										Janus.log('Inorge add micro audio stream for screen stream');
 										streamsDone(handleId, jsep, media, callbacks, stream);
 									}
 								}else{
