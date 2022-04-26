@@ -8,17 +8,17 @@ declare namespace JanusJS {
 	}
 
 	enum DebugLevel {
-		Trace = 'trace',
-		Debug = 'debug',
-		Log = 'log',
-		Warning = 'warn',
-		Error = 'error'
+		Trace = "trace",
+		Debug = "debug",
+		Log = "log",
+		Warning = "warn",
+		Error = "error",
 	}
 
 	interface JSEP {}
 
 	interface InitOptions {
-		debug?: boolean | 'all' | DebugLevel[];
+		debug?: boolean | "all" | DebugLevel[];
 		callback?: Function;
 		dependencies?: Dependencies;
 	}
@@ -38,13 +38,13 @@ declare namespace JanusJS {
 	}
 
 	enum MessageType {
-		Recording = 'recording',
-		Starting = 'starting',
-		Started = 'started',
-		Stopped = 'stopped',
-		SlowLink = 'slow_link',
-		Preparing = 'preparing',
-		Refreshing = 'refreshing'
+		Recording = "recording",
+		Starting = "starting",
+		Started = "started",
+		Stopped = "stopped",
+		SlowLink = "slow_link",
+		Preparing = "preparing",
+		Refreshing = "refreshing",
 	}
 
 	interface Message {
@@ -63,8 +63,8 @@ declare namespace JanusJS {
 		error?: (error: any) => void;
 		consentDialog?: (on: boolean) => void;
 		webrtcState?: (isConnected: boolean) => void;
-		iceState?: (state: 'connected' | 'failed') => void;
-		mediaState?: (state: { type: 'audio' | 'video'; on: boolean }) => void;
+		iceState?: (state: "connected" | "failed") => void;
+		mediaState?: (state: { type: "audio" | "video"; on: boolean }) => void;
 		slowLink?: (state: { uplink: boolean }) => void;
 		onmessage?: (message: Message, jsep?: JSEP) => void;
 		onlocalstream?: (stream: MediaStream) => void;
@@ -86,12 +86,12 @@ declare namespace JanusJS {
 			video?:
 				| boolean
 				| { deviceId: string }
-				| 'lowres'
-				| 'lowres-16:9'
-				| 'stdres'
-				| 'stdres-16:9'
-				| 'hires'
-				| 'hires-16:9';
+				| "lowres"
+				| "lowres-16:9"
+				| "stdres"
+				| "stdres-16:9"
+				| "hires"
+				| "hires-16:9";
 			data?: boolean;
 			failIfNoAudio?: boolean;
 			failIfNoVideo?: boolean;
@@ -138,8 +138,14 @@ declare namespace JanusJS {
 		static warn(...args: any[]): void;
 		static error(...args: any[]): void;
 		static randomString(length: number): string;
-		static attachMediaStream(element: HTMLMediaElement, stream: MediaStream): void;
-		static reattachMediaStream(to: HTMLMediaElement, from: HTMLMediaElement): void;
+		static attachMediaStream(
+			element: HTMLMediaElement,
+			stream: MediaStream
+		): void;
+		static reattachMediaStream(
+			to: HTMLMediaElement,
+			from: HTMLMediaElement
+		): void;
 
 		constructor(options: ConstructorOptions);
 
