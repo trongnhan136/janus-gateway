@@ -1350,6 +1350,7 @@ function Janus(gatewayCallbacks) {
 			typeof callbacks.onscreenshare == "function"
 				? callbacks.onscreenshare
 				: null;
+
 		if (!connected) {
 			Janus.warn("Is the server down? (connected=false)");
 			callbacks.error("Is the server down? (connected=false)");
@@ -3023,11 +3024,19 @@ function Janus(gatewayCallbacks) {
 							audio: audioExist && !media.keepAudio ? audioSupport : false,
 							video: videoExist && !media.keepVideo ? videoSupport : false,
 						};
+
 						Janus.debug("getUserMedia constraints", gumConstraints);
 						if (!gumConstraints.audio && !gumConstraints.video) {
 							pluginHandle.consentDialog(false);
 							streamsDone(handleId, jsep, media, callbacks, stream);
 						} else {
+							let deviceId = media.cameraSourceId;
+							if (gumConstraints.video === true && deviceId && deviceId != "") {
+								gumConstraints.video = { deviceId: deviceId };
+							}
+
+							Janus.debug("getUserMedia constraints modified", gumConstraints);
+
 							navigator.mediaDevices
 								.getUserMedia(gumConstraints)
 								.then(function (stream) {
