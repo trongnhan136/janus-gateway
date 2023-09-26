@@ -1350,6 +1350,10 @@ function Janus(gatewayCallbacks) {
 			typeof callbacks.onscreenshare == "function"
 				? callbacks.onscreenshare
 				: null;
+		callbacks.onWebcamShare =
+			typeof callbacks.onWebcamShare == "function"
+				? callbacks.onWebcamShare
+				: null;
 
 		if (!connected) {
 			Janus.warn("Is the server down? (connected=false)");
@@ -1485,6 +1489,7 @@ function Janus(gatewayCallbacks) {
 					oncleanup: callbacks.oncleanup,
 					ondetached: callbacks.ondetached,
 					onscreenshare: callbacks.onscreenshare,
+					onWebcamShare: callbacks.onWebcamShare,
 					hangup: function (sendRequest) {
 						cleanupWebrtc(handleId, sendRequest === true);
 					},
@@ -1614,6 +1619,7 @@ function Janus(gatewayCallbacks) {
 					oncleanup: callbacks.oncleanup,
 					ondetached: callbacks.ondetached,
 					onscreenshare: callbacks.onscreenshare,
+					onWebcamShare: callbacks.onWebcamShare,
 					hangup: function (sendRequest) {
 						cleanupWebrtc(handleId, sendRequest === true);
 					},
@@ -3037,20 +3043,32 @@ function Janus(gatewayCallbacks) {
 
 							Janus.debug("getUserMedia constraints modified", gumConstraints);
 
-							navigator.mediaDevices
-								.getUserMedia(gumConstraints)
-								.then(function (stream) {
-									pluginHandle.consentDialog(false);
-									streamsDone(handleId, jsep, media, callbacks, stream);
-								})
-								.catch(function (error) {
-									pluginHandle.consentDialog(false);
-									callbacks.error({
-										code: error.code,
-										name: error.name,
-										message: error.message,
-									});
+							if (pluginHandle.onWebcamShare) {
+								pluginHandle.onWebcamShare(gumConstraints, (stream) => {
+									if (stream) {
+										pluginHandle.consentDialog(false);
+										streamsDone(handleId, jsep, media, callbacks, stream);
+									} else {
+										pluginHandle.consentDialog(false);
+										callbacks.error("electron stream error");
+									}
 								});
+							} else {
+								navigator.mediaDevices
+									.getUserMedia(gumConstraints)
+									.then(function (stream) {
+										pluginHandle.consentDialog(false);
+										streamsDone(handleId, jsep, media, callbacks, stream);
+									})
+									.catch(function (error) {
+										pluginHandle.consentDialog(false);
+										callbacks.error({
+											code: error.code,
+											name: error.name,
+											message: error.message,
+										});
+									});
+							}
 						}
 					})
 					.catch(function (error) {
